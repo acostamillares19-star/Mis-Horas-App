@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Horas de Trabajo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .header, .summary, .history-container {
+                grid-column: 1 / span 2;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            
+            .header, .history-container {
+                grid-column: 1 / span 3;
+            }
+            
+            .summary {
+                grid-column: 1 / span 2;
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary);
+            outline: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-block {
+            width: 100%;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 5px solid var(--secondary);
+        }
+        
+        .summary-card h3 {
+            font-size: 1.2rem;
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+        
+        .summary-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .summary-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+        
+        .history-container {
+            margin-top: 10px;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .action-btn.edit {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .action-btn.delete {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .config-panel {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .config-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        .config-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+        
+        .config-content.show {
+            max-height: 500px;
+            margin-top: 20px;
+        }
+        
+        .reset-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-today {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-week {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-month {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .current-time {
+            background-color: var(--light);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.3s ease;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background-color: var(--success);
+        }
+        
+        .notification.error {
+            background-color: var(--danger);
+        }
+        
+        .notification.warning {
+            background-color: var(--warning);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-clock"></i> Calculadora de Horas de Trabajo</h1>
+            <p>Registra tus horas de entrada y salida, y obtén acumulados diarios, semanales y mensuales</p>
+        </header>
+        
+        <div class="current-time">
+            <i class="fas fa-calendar-day"></i> <span id="current-date">Cargando fecha...</span> | 
+            <i class="fas fa-clock"></i> <span id="current-time">Cargando hora...</span>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-calendar-plus"></i> Registrar Horas</h2>
+            <form id="time-form">
+                <div class="form-group">
+                    <label class="form-label" for="date">Fecha</label>
+                    <input type="date" id="date" class="form-control" required>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="start-time">Hora de Entrada</label>
+                        <input type="time" id="start-time" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="end-time">Hora de Salida</label>
+                        <input type="time" id="end-time" class="form-control" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="notes">Notas (opcional)</label>
+                    <textarea id="notes" class="form-control" rows="2" placeholder="Ej: Reunión con cliente, trabajo extra..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-success btn-block">
+                    <i class="fas fa-save"></i> Guardar Registro
+                </button>
+                
+                <div class="config-panel">
+                    <div class="config-toggle" id="config-toggle">
+                        <span><i class="fas fa-cog"></i> Configuración</span>
+                        <i class="fas fa-chevron-down" id="config-arrow"></i>
+                    </div>
+                    
+                    <div class="config-content" id="config-content">
+                        <div class="form-group">
+                            <label class="form-label" for="work-hours">Horas laborales diarias estándar</label>
+                            <input type="number" id="work-hours" class="form-control" value="8" min="1" max="24">
+                        </div>
+                        
+                        <div class="reset-buttons">
+                            <button type="button" id="reset-week" class="btn btn-danger">
+                                <i class="fas fa-redo"></i> Reiniciar Semana
+                            </button>
+                            <button type="button" id="reset-month" class="btn btn-danger">
+                                <i class="fas fa-calendar-times"></i> Reiniciar Mes
+                            </button>
+                            <button type="button" id="reset-all" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i> Borrar Todos los Datos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card summary">
+            <h2 class="card-title"><i class="fas fa-chart-bar"></i> Resumen de Horas</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>Horas de Hoy</h3>
+                    <div class="summary-value" id="today-hours">0:00</div>
+                    <div class="summary-label">Horas trabajadas hoy</div>
+                </div>
+                
+                <div class="summary-card">
+                    <h3>Horas de la Semana</h3>
+                    <div class="summary-value" id="week-hours">0:00</div>
+                    <div class="summary-label">Acumulado semanal</div>
+                </div>
+                
+                <div class="summary-card">
+                    <h3>Horas del Mes</h3>
+                    <div class="summary-value" id="month-hours">0:00</div>
+                    <div class="summary-label">Acumulado mensual</div>
+                </div>
+                
+                <div class="summary-card">
+                    <h3>Promedio Diario</h3>
+                    <div class="summary-value" id="average-hours">0:00</div>
+                    <div class="summary-label">Promedio horas/día este mes</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="history-container card">
+            <h2 class="card-title"><i class="fas fa-history"></i> Historial de Registros</h2>
+            
+            <div class="table-responsive">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th>Horas</th>
+                            <th>Notas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                        <!-- Las filas se agregarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="empty-history" class="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <h3>No hay registros aún</h3>
+                <p>Agrega tu primer registro de horas usando el formulario arriba.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Calculadora de Horas de Trabajo &copy; 2023 | Los datos se guardan localmente en tu navegador</p>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Variables globales
+        let timeRecords = [];
+        const STORAGE_KEY = 'workTimeRecords';
+        const CONFIG_KEY = 'workTimeConfig';
+        
+        // Configuración por defecto
+        let config = {
+            dailyStandardHours: 8
+        };
+        
+        // Elementos del DOM
+        const timeForm = document.getElementById('time-form');
+        const dateInput = document.getElementById('date');
+        const startTimeInput = document.getElementById('start-time');
+        const endTimeInput = document.getElementById('end-time');
+        const notesInput = document.getElementById('notes');
+        const historyBody = document.getElementById('history-body');
+        const emptyHistory = document.getElementById('empty-history');
+        const todayHoursEl = document.getElementById('today-hours');
+        const weekHoursEl = document.getElementById('week-hours');
+        const monthHoursEl = document.getElementById('month-hours');
+        const averageHoursEl = document.getElementById('average-hours');
+        const configToggle = document.getElementById('config-toggle');
+        const configContent = document.getElementById('config-content');
+        const configArrow = document.getElementById('config-arrow');
+        const workHoursInput = document.getElementById('work-hours');
+        const resetWeekBtn = document.getElementById('reset-week');
+        const resetMonthBtn = document.getElementById('reset-month');
+        const resetAllBtn = document.getElementById('reset-all');
+        const notification = document.getElementById('notification');
+        const currentDateEl = document.getElementById('current-date');
+        const currentTimeEl = document.getElementById('current-time');
+        
+        // Inicializar la aplicación
+        function init() {
+            // Establecer fecha y hora actual por defecto
+            const now = new Date();
+            dateInput.valueAsDate = now;
+            
+            // Establecer hora de entrada por defecto (8:00 AM)
+            const startTime = new Date();
+            startTime.setHours(8, 0, 0, 0);
+            startTimeInput.value = formatTime(startTime);
+            
+            // Establecer hora de salida por defecto (5:00 PM)
+            const endTime = new Date();
+            endTime.setHours(17, 0, 0, 0);
+            endTimeInput.value = formatTime(endTime);
+            
+            // Cargar datos guardados
+            loadData();
+            
+            // Configurar event listeners
+            setupEventListeners();
+            
+            // Actualizar reloj en tiempo real
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Mostrar resumen inicial
+            updateSummary();
+        }
+        
+        // Cargar datos del localStorage
+        function loadData() {
+            // Cargar registros
+            const savedRecords = localStorage.getItem(STORAGE_KEY);
+            if (savedRecords) {
+                timeRecords = JSON.parse(savedRecords);
+            }
+            
+            // Cargar configuración
+            const savedConfig = localStorage.getItem(CONFIG_KEY);
+            if (savedConfig) {
+                config = JSON.parse(savedConfig);
+                workHoursInput.value = config.dailyStandardHours;
+            }
+            
+            // Actualizar la tabla de historial
+            updateHistoryTable();
+        }
+        
+        // Guardar datos en localStorage
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(timeRecords));
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+        }
+        
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Envío del formulario
+            timeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                addTimeRecord();
+            });
+            
+            // Toggle configuración
+            configToggle.addEventListener('click', function() {
+                configContent.classList.toggle('show');
+                configArrow.classList.toggle('fa-chevron-down');
+                configArrow.classList.toggle('fa-chevron-up');
+            });
+            
+            // Cambio en horas estándar
+            workHoursInput.addEventListener('change', function() {
+                config.dailyStandardHours = parseInt(this.value) || 8;
+                saveData();
+                updateSummary();
+                showNotification('Configuración guardada', 'success');
+            });
+            
+            // Botones de reinicio
+            resetWeekBtn.addEventListener('click', resetWeekData);
+            resetMonthBtn.addEventListener('click', resetMonthData);
+            resetAllBtn.addEventListener('click', resetAllData);
+        }
+        
+        // Añadir un nuevo registro de horas
+        function addTimeRecord() {
+            const date = dateInput.value;
+            const startTime = startTimeInput.value;
+            const endTime = endTimeInput.value;
+            const notes = notesInput.value.trim();
+            
+            // Validar que la hora de salida sea posterior a la de entrada
+            if (startTime >= endTime) {
+                showNotification('La hora de salida debe ser posterior a la de entrada', 'error');
+                return;
+            }
+            
+            // Calcular horas trabajadas
+            const hoursWorked = calculateHours(startTime, endTime);
+            
+            // Crear objeto de registro
+            const record = {
+                id: Date.now(),
+                date: date,
+                startTime: startTime,
+                endTime: endTime,
+                hours: hoursWorked,
+                notes: notes
+            };
+            
+            // Agregar al array de registros
+            timeRecords.unshift(record);
+            
+            // Guardar y actualizar UI
+            saveData();
+            updateHistoryTable();
+            updateSummary();
+            
+            // Mostrar notificación
+            showNotification('Registro guardado correctamente', 'success');
+            
+            // Limpiar formulario (excepto fecha)
+            startTimeInput.value = '';
+            endTimeInput.value = '';
+            notesInput.value = '';
+            
+            // Restablecer horas por defecto para el siguiente registro
+            const now = new Date();
+            const defaultStart = new Date();
+            defaultStart.setHours(8, 0, 0, 0);
+            startTimeInput.value = formatTime(defaultStart);
+            
+            const defaultEnd = new Date();
+            defaultEnd.setHours(17, 0, 0, 0);
+            endTimeInput.value = formatTime(defaultEnd);
+        }
+        
+        // Calcular horas trabajadas entre dos tiempos
+        function calculateHours(start, end) {
+            const [startHours, startMinutes] = start.split(':').map(Number);
+            const [endHours, endMinutes] = end.split(':').map(Number);
+            
+            let hours = endHours - startHours;
+            let minutes = endMinutes - startMinutes;
+            
+            // Ajustar si los minutos son negativos
+            if (minutes < 0) {
+                hours -= 1;
+                minutes += 60;
+            }
+            
+            return { hours, minutes };
+        }
+        
+        // Formatear horas y minutos a string
+        function formatHours(hoursObj) {
+            return `${hoursObj.hours}:${hoursObj.minutes.toString().padStart(2, '0')}`;
+        }
+        
+        // Sumar dos objetos de horas
+        function addHours(hours1, hours2) {
+            let totalHours = hours1.hours + hours2.hours;
+            let totalMinutes = hours1.minutes + hours2.minutes;
+            
+            // Ajustar minutos a horas
+            if (totalMinutes >= 60) {
+                totalHours += Math.floor(totalMinutes / 60);
+                totalMinutes = totalMinutes % 60;
+            }
+            
+            return { hours: totalHours, minutes: totalMinutes };
+        }
+        
+        // Actualizar tabla de historial
+        function updateHistoryTable() {
+            // Limpiar tabla
+            historyBody.innerHTML = '';
+            
+            // Mostrar mensaje si no hay registros
+            if (timeRecords.length === 0) {
+                emptyHistory.style.display = 'block';
+                return;
+            }
+            
+            emptyHistory.style.display = 'none';
+            
+            // Agregar cada registro a la tabla
+            timeRecords.forEach(record => {
+                const row = document.createElement('tr');
+                
+                // Formatear fecha
+                const dateObj = new Date(record.date);
+                const formattedDate = dateObj.toLocaleDateString('es-ES', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                // Determinar si es hoy, esta semana o este mes
+                const now = new Date();
+                const recordDate = new Date(record.date);
+                const timeDiff = now - recordDate;
+                const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                
+                let dateBadge = '';
+                if (daysDiff === 0) {
+                    dateBadge = '<span class="badge badge-today">Hoy</span> ';
+                } else if (daysDiff < 7) {
+                    dateBadge = '<span class="badge badge-week">Esta semana</span> ';
+                } else if (recordDate.getMonth() === now.getMonth() && recordDate.getFullYear() === now.getFullYear()) {
+                    dateBadge = '<span class="badge badge-month">Este mes</span> ';
+                }
+                
+                // Crear fila
+                row.innerHTML = `
+                    <td>${dateBadge}${formattedDate}</td>
+                    <td>${record.startTime}</td>
+                    <td>${record.endTime}</td>
+                    <td><strong>${formatHours(record.hours)} h</strong></td>
+                    <td>${record.notes || '-'}</td>
+                    <td class="actions">
+                        <button class="action-btn edit" onclick="editRecord(${record.id})">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="action-btn delete" onclick="deleteRecord(${record.id})">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                historyBody.appendChild(row);
+            });
+        }
+        
+        // Actualizar resumen de horas
+        function updateSummary() {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const currentWeek = getWeekNumber(now);
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            let todayTotal = { hours: 0, minutes: 0 };
+            let weekTotal = { hours: 0, minutes: 0 };
+            let monthTotal = { hours: 0, minutes: 0 };
+            let monthDays = 0;
+            
+            // Calcular totales
+            timeRecords.forEach(record => {
+                const recordDate = new Date(record.date);
+                const recordWeek = getWeekNumber(recordDate);
+                const recordMonth = recordDate.getMonth();
+                const recordYear = recordDate.getFullYear();
+                
+                // Horas de hoy
+                if (record.date === today) {
+                    todayTotal = addHours(todayTotal, record.hours);
+                }
+                
+                // Horas de esta semana
+                if (recordWeek === currentWeek && recordYear === currentYear) {
+                    weekTotal = addHours(weekTotal, record.hours);
+                }
+                
+                // Horas de este mes
+                if (recordMonth === currentMonth && recordYear === currentYear) {
+                    monthTotal = addHours(monthTotal, record.hours);
+                    monthDays++;
+                }
+            });
+            
+            // Calcular promedio diario del mes
+            let averageHours = { hours: 0, minutes: 0 };
+            if (monthDays > 0) {
+                const totalMinutes = monthTotal.hours * 60 + monthTotal.minutes;
+                const avgMinutes = Math.floor(totalMinutes / monthDays);
+                averageHours = {
+                    hours: Math.floor(avgMinutes / 60),
+                    minutes: avgMinutes % 60
+                };
+            }
+            
+            // Actualizar UI
+            todayHoursEl.textContent = formatHours(todayTotal);
+            weekHoursEl.textContent = formatHours(weekTotal);
+            monthHoursEl.textContent = formatHours(monthTotal);
+            averageHoursEl.textContent = formatHours(averageHours);
+            
+            // Resaltar si se exceden las horas estándar
+            highlightExceededHours(todayTotal, todayHoursEl);
+            highlightExceededHours(weekTotal, weekHoursEl, 5); // 5 días laborales
+            highlightExceededHours(monthTotal, monthHoursEl, 20); // ~20 días laborales
+        }
+        
+        // Resaltar horas que exceden el estándar
+        function highlightExceededHours(hours, element, days = 1) {
+            const totalMinutes = hours.hours * 60 + hours.minutes;
+            const standardMinutes = config.dailyStandardHours * 60 * days;
+            
+            if (totalMinutes > standardMinutes) {
+                element.style.color = 'var(--danger)';
+                element.title = `Excede el estándar de ${config.dailyStandardHours * days} horas`;
+            } else if (totalMinutes === standardMinutes) {
+                element.style.color = 'var(--success)';
+            } else {
+                element.style.color = 'var(--primary)';
+            }
+        }
+        
+        // Obtener número de semana
+        function getWeekNumber(date) {
+            const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+            const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+        }
+        
+        // Formatear hora para input time
+        function formatTime(date) {
+            return date.toTimeString().slice(0, 5);
+        }
+        
+        // Mostrar notificación
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Actualizar reloj en tiempo real
+        function updateClock() {
+            const now = new Date();
+            
+            // Formatear fecha
+            const optionsDate = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            currentDateEl.textContent = now.toLocaleDateString('es-ES', optionsDate);
+            
+            // Formatear hora
+            const optionsTime = { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            };
+            currentTimeEl.textContent = now.toLocaleTimeString('es-ES', optionsTime);
+        }
+        
+        // Funciones para manejar registros (disponibles globalmente)
+        window.editRecord = function(id) {
+            const record = timeRecords.find(r => r.id === id);
+            if (!record) return;
+            
+            // Llenar formulario con los datos del registro
+            dateInput.value = record.date;
+            startTimeInput.value = record.startTime;
+            endTimeInput.value = record.endTime;
+            notesInput.value = record.notes;
+            
+            // Eliminar el registro (se volverá a agregar al guardar)
+            deleteRecord(id, false);
+            
+            // Mostrar mensaje
+            showNotification('Modifica el registro y guárdalo de nuevo', 'warning');
+        };
+        
+        window.deleteRecord = function(id, showNotification = true) {
+            if (!confirm('¿Estás seguro de eliminar este registro?')) return;
+            
+            // Eliminar registro
+            timeRecords = timeRecords.filter(record => record.id !== id);
+            
+            // Guardar y actualizar
+            saveData();
+            updateHistoryTable();
+            updateSummary();
+            
+            if (showNotification) {
+                showNotification('Registro eliminado', 'error');
+            }
+        };
+        
+        // Funciones de reinicio
+        function resetWeekData() {
+            if (!confirm('¿Reiniciar todos los datos de esta semana? Esta acción no se puede deshacer.')) return;
+            
+            const now = new Date();
+            const currentWeek = getWeekNumber(now);
+            const currentYear = now.getFullYear();
+            
+            // Filtrar registros que NO son de esta semana
+            timeRecords = timeRecords.filter(record => {
+                const recordDate = new Date(record.date);
+                const recordWeek = getWeekNumber(recordDate);
+                const recordYear = recordDate.getFullYear();
+                return !(recordWeek === currentWeek && recordYear === currentYear);
+            });
+            
+            saveData();
+            updateHistoryTable();
+            updateSummary();
+            showNotification('Datos de la semana reiniciados', 'warning');
+        }
+        
+        function resetMonthData() {
+            if (!confirm('¿Reiniciar todos los datos de este mes? Esta acción no se puede deshacer.')) return;
+            
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            // Filtrar registros que NO son de este mes
+            timeRecords = timeRecords.filter(record => {
+                const recordDate = new Date(record.date);
+                return !(recordDate.getMonth() === currentMonth && recordDate.getFullYear() === currentYear);
+            });
+            
+            saveData();
+            updateHistoryTable();
+            updateSummary();
+            showNotification('Datos del mes reiniciados', 'warning');
+        }
+        
+        function resetAllData() {
+            if (!confirm('¿Eliminar TODOS los registros? Esta acción no se puede deshacer.')) return;
+            
+            timeRecords = [];
+            saveData();
+            updateHistoryTable();
+            updateSummary();
+            showNotification('Todos los datos han sido eliminados', 'error');
+        }
+        
+        // Inicializar la aplicación cuando se carga la página
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
